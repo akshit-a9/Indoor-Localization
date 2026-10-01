@@ -14,6 +14,7 @@ on-device via ONNX Runtime in a Flutter app.
 ├── Data_Collection/       Flutter app used to record labeled WiFi scans on Android
 ├── Demo/                  Native Android demo skeleton (Kotlin)
 ├── Demo_Flutter/          Flutter demo running ONNX models on-device with map overlay
+├── ESP32/                 ESP32 client: scans WiFi, queries the API, OLED + RGB LED, MPU6050 logging
 └── localization_api/      FastAPI service that serves the trained scikit-learn models
 ```
 

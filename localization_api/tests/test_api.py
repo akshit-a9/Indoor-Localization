@@ -64,3 +64,18 @@ def test_predict_lowercases_bssid_input() -> None:
         assert r.status_code == 200
         data = r.json()
         assert data["ap_detected"] == 2
+
+
+def test_predict_with_2_4ghz_model() -> None:
+    with TestClient(app) as client:
+        r = client.post(
+            "/predict",
+            json={
+                "scans": [{"bssid": "70:ea:1a:22:a9:41", "rssi": -60}],
+                "model": "Random Forest 2.4GHz",
+            },
+        )
+        assert r.status_code == 200
+        data = r.json()
+        assert data["model"] == "Random Forest 2.4GHz"
+        assert len(data["probabilities"]) == 52

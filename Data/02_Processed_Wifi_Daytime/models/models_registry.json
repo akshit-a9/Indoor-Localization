@@ -22,5 +22,11 @@
     "test_accuracy": 0.9096,
     "val_accuracy": 0.8877,
     "needs_scaling": false
+  },
+  "Random Forest 2.4GHz": {
+    "file": "Random_Forest_2_4GHz.joblib",
+    "test_accuracy": 0.9096,
+    "val_accuracy": 0.9519,
+    "needs_scaling": false
   }
 }
