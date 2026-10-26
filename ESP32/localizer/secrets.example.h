@@ -7,5 +7,7 @@
 #define WIFI_PASSWORD "your-password"
 
 // Machine running localization_api (uvicorn on port 8000).
-// Windows Mobile Hotspot always puts the laptop at 192.168.137.1.
+// Windows Mobile Hotspot always puts the laptop at 192.168.137.1. On a phone
+// hotspot this is only a first guess: the board remembers the last address
+// that worked and probes the subnet for /health when that fails.
 #define API_BASE_URL  "http://192.168.137.1:8000"

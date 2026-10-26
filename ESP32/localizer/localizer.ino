@@ -15,6 +15,7 @@
 #include <U8g2lib.h>
 #include <ArduinoJson.h>
 #include <driver/gpio.h>
+#include <Preferences.h>
 
 #include "config.h"
 #include "result.h"
@@ -211,6 +212,8 @@ static void imuTask(void *) {
 // ---------------------------------------------------------------------------
 // Localization cycle
 // ---------------------------------------------------------------------------
+static String apiBase = API_BASE_URL;  // replaced by locateApi()
+static int apiFailures = 0;            // consecutive "API unreachable" results
 static uint32_t cycle = 0;
 static uint32_t lastScanStart = 0;
 static Result last;
@@ -266,7 +269,7 @@ static Result localize() {
 
   HTTPClient http;
   http.setTimeout(HTTP_TIMEOUT_MS);
-  http.begin(String(API_BASE_URL) + "/predict");
+  http.begin(apiBase + "/predict");
   http.addHeader("Content-Type", "application/json");
   uint32_t t0 = millis();
   int code = http.POST(body);
@@ -274,6 +277,8 @@ static Result localize() {
   String payload = code > 0 ? http.getString() : "";
   http.end();
 
+  if (code < 0) ++apiFailures;
+  else apiFailures = 0;
   if (code != 200) {
     r.error = code > 0 ? "API HTTP " + String(code) : "API unreachable: " + HTTPClient::errorToString(code);
     return r;
@@ -301,22 +306,78 @@ static Result localize() {
   return r;
 }
 
-static void apiHealthCheck() {
+// ---------------------------------------------------------------------------
+// Finding the API. Phone hotspots hand the laptop a new address now and then,
+// so try the last address that worked (kept in flash), then secrets.h, then
+// probe every host on the /24 for a /health endpoint on API_PORT.
+// ---------------------------------------------------------------------------
+static bool fetchHealth(const String &base, JsonDocument &doc, uint32_t timeoutMs) {
   HTTPClient http;
-  http.setTimeout(HTTP_TIMEOUT_MS);
-  http.begin(String(API_BASE_URL) + "/health");
+  http.setConnectTimeout(timeoutMs);
+  http.setTimeout(timeoutMs);
+  if (!http.begin(base + "/health")) return false;
   int code = http.GET();
-  String payload = code > 0 ? http.getString() : "";
+  String payload = code == 200 ? http.getString() : "";
   http.end();
+  return code == 200 && !deserializeJson(doc, payload) && doc["loaded_models"].is<JsonArrayConst>();
+}
 
+static void useApiBase(const String &base) {
+  if (base == apiBase) return;
+  apiBase = base;
+  Preferences prefs;
+  prefs.begin("localizer", false);
+  prefs.putString("api", base);
+  prefs.end();
+}
+
+static bool locateApi(JsonDocument &doc) {
+  Preferences prefs;
+  prefs.begin("localizer", true);
+  String saved = prefs.getString("api", "");
+  prefs.end();
+
+  for (const String &base : {saved, String(API_BASE_URL)}) {
+    if (base.length() && fetchHealth(base, doc, 1500)) {
+      apiBase = saved;  // so useApiBase() only writes flash when it changes
+      useApiBase(base);
+      return true;
+    }
+  }
+
+  IPAddress me = WiFi.localIP();
+  String subnet = String(me[0]) + "." + me[1] + "." + me[2] + ".";
+  Serial.printf("# API not at saved/secrets address, probing %sx:%d\n", subnet.c_str(), API_PORT);
+  oledMessage("Searching for API", subnet + "x:" + String(API_PORT));
+  ledSet(0, 0, 255);
+  for (int host = 1; host < 255; ++host) {
+    IPAddress ip(me[0], me[1], me[2], host);
+    if (ip == me) continue;
+    WiFiClient probe;
+    if (!probe.connect(ip, API_PORT, API_PROBE_MS)) continue;
+    probe.stop();
+    String base = "http://" + ip.toString() + ":" + String(API_PORT);
+    if (fetchHealth(base, doc, 1500)) {
+      Serial.printf("# API found at %s\n", base.c_str());
+      useApiBase(base);
+      ledRestore();
+      return true;
+    }
+  }
+  ledRestore();
+  return false;
+}
+
+static void apiHealthCheck() {
   JsonDocument doc;
-  if (code != 200 || deserializeJson(doc, payload)) {
-    Serial.printf("# API health failed: %d\n", code);
-    oledMessage("API not reachable", String(API_BASE_URL));
+  if (!locateApi(doc)) {
+    Serial.println("# API not found on this network");
+    oledMessage("API not found", "Is localization_api running on this hotspot?");
     ledPulse(255, 0, 0);
     delay(2000);
     return;
   }
+  Serial.printf("# API at %s\n", apiBase.c_str());
   bool hasModel = false;
   for (JsonVariantConst m : doc["loaded_models"].as<JsonArrayConst>()) hasModel |= m == API_MODEL;
   String msg = String(doc["label_count"] | 0) + " locations, " + String(doc["feature_count"] | 0) + " APs. " +
@@ -399,6 +460,12 @@ void loop() {
   drawResult(last, false);
   if (last.ok) ledHold(0, 255, 0);
   else ledHold(255, 0, 0);
+
+  if (apiFailures >= 3) {  // laptop probably got a new address: look again
+    apiFailures = 0;
+    JsonDocument doc;
+    if (locateApi(doc)) Serial.printf("# API at %s\n", apiBase.c_str());
+  }
 
   Serial.printf("PRED,%llu,%lu,%d,%d,%.4f,%d,%d,%lu,\"%s\"\n", nowUs(), (unsigned long)cycle, last.ok,
                 last.classIndex, last.confidence, last.apDetected, last.apSeen,

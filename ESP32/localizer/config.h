@@ -44,6 +44,8 @@
 #define SCAN_INTERVAL_MS   4000   // min time between scan starts
 #define SCAN_MS_PER_CHAN   120    // active-scan dwell per channel
 #define HTTP_TIMEOUT_MS    8000
+#define API_PORT           8000   // used when probing the subnet for the API
+#define API_PROBE_MS       60     // TCP connect timeout per host while probing
 #define RSSI_OFFSET_DB     0      // added to every RSSI (ESP32 vs phone calibration)
 #define MIN_CONFIDENCE     0.0f   // >0: predictions below this light the LED red
 
