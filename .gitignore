@@ -221,6 +221,3 @@ dist/
 venv/
 env/
 .ipynb_checkpoints/
-
-# ESP32 firmware: WiFi credentials stay local
-ESP32/**/secrets.h
