@@ -14,12 +14,15 @@ on-device via ONNX Runtime in a Flutter app.
 ├── 03_Training/          Notebooks + scripts: preprocess, features, train, ONNX export, evaluate
 ├── 04_API/               FastAPI service that serves the trained scikit-learn models
 ├── 05_App_Flutter/       Flutter app running the ONNX models on-device, with map overlay + walk tests
-└── 06_App_Android/       Native Android (Kotlin) reference app, same ONNX models
+├── 06_App_Android/       Native Android (Kotlin) reference app, same ONNX models
+└── 07_ESP32_Collector/   ESP32 firmware to re-record the same spots with the ESP32, driven from a phone
 ```
 
 Folders are numbered in pipeline order. The ESP32 client that queries the API
 (and the navigation work built on it) lives in its own repo,
-[WayPoint](https://github.com/akshit-a9/WayPoint).
+[WayPoint](https://github.com/akshit-a9/WayPoint). `07_ESP32_Collector/` records
+ESP32 scans at the phone's spots, so the phone data can be calibrated to (or
+replaced by) what the ESP32 actually hears.
 ## Pipeline overview
 
 1. **Collect** — `01_Data_Collection/` records timestamped WiFi scans tagged with a

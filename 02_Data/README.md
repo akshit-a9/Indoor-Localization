@@ -10,7 +10,8 @@ project.
 ├── 01_Wifi_Daytime/             Raw labeled WiFi scans (one CSV per location)
 ├── 02_Processed_Wifi_Daytime/   Fingerprints, splits, scaler, label map, trained models
 ├── 03_Map_Data/                 Floor plans and pixel coordinates of each labeled point
-└── 04_Testing/                  Live walk-test recordings and evaluation figures
+├── 04_Testing/                  Live walk-test recordings and evaluation figures
+└── 05_Wifi_ESP32/               ESP32 scans of the same spots, from 07_ESP32_Collector
 ```
 
 ## Conventions

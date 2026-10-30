@@ -1,0 +1,27 @@
+{
+  "offset_db": -4.904347826086955,
+  "slope": 0.7909964771278334,
+  "intercept": -19.583227217773125,
+  "inv_slope": 0.8971358644598113,
+  "inv_intercept": -2.9701737920041995,
+  "esp_floor_dbm": -90.56,
+  "n_pairs": 9,
+  "n_spots": 1,
+  "correlation": 0.8423961706303886,
+  "spread_after_offset_db": 4.180770906013961,
+  "spread_after_linear_db": 3.8640931497761515,
+  "accuracy": {
+    "a. phone model, raw ESP32 scans": {
+      "top1": 0.0,
+      "top3": 0.03225806451612903
+    },
+    "b. phone model, ESP32 shifted to phone scale": {
+      "top1": 0.0,
+      "top3": 0.1935483870967742
+    },
+    "c. model trained on phone data shifted to ESP32": {
+      "top1": 0.0,
+      "top3": 0.2903225806451613
+    }
+  }
+}

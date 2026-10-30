@@ -14,12 +14,18 @@ step.
 | 04 | [04_Export_ONNX.ipynb](04_Export_ONNX.ipynb) | `models/*.joblib` | `models/*.onnx` |
 | 05 | [05_Testing_Statistics.ipynb](05_Testing_Statistics.ipynb) | `02_Data/04_Testing/walk_test_*.csv`, `02_Data/03_Map_Data/` | `02_Data/04_Testing/figures/` |
 | 06 | [06_Train_2_4GHz_Model.py](06_Train_2_4GHz_Model.py) | `splits/`, raw CSVs (for each BSSID's band) | `models/Random_Forest_2_4GHz.joblib`, registry entry `Random Forest 2.4GHz` |
+| 07 | [07_Compare_ESP32_vs_Phone.py](07_Compare_ESP32_vs_Phone.py) | `02_Data/05_Wifi_ESP32/*.csv`, raw phone CSVs, `splits/` | `02_Data/05_Wifi_ESP32/analysis/` (`calibration.json`, figure) |
 
 ## Notes
 
 - `06_Train_2_4GHz_Model.py` is a script, not a notebook. Run it from the repo root:
   `.venv/Scripts/python 03_Training/06_Train_2_4GHz_Model.py`. It trains a Random Forest
   that ignores 5 GHz APs, for 2.4 GHz-only clients such as the ESP32 in the WayPoint repo.
+- `07_Compare_ESP32_vs_Phone.py` is also a script: `python3 03_Training/07_Compare_ESP32_vs_Phone.py`.
+  It compares ESP32 scans recorded with [`07_ESP32_Collector`](../07_ESP32_Collector/) to the phone
+  scans of the same spots: the dB offset, which APs the ESP32 misses, and whether shifting the phone
+  data onto the ESP32's scale fixes localization. Calibration is fitted leave-one-spot-out, so record
+  at least 3 spots before trusting the accuracy numbers.
 - Notebook 01 controls AP-coverage filtering. Adjusting the threshold changes
   the `feature_bssids.json` produced by notebook 02, which in turn invalidates
   every downstream artifact (models, ONNX exports, the API and the Flutter app
